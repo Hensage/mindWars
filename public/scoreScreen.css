@@ -1,0 +1,79 @@
+@keyframes slideInFromTop {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes fullToCenter {
+    from { width: 98%; }
+    to   { width: 49%; }
+}
+@keyframes noneToCenter {
+    from { width: 0%; }
+    to   { width: 49%; }
+}
+#found{
+    animation: 0.5s ease-out 0s 1 fadeIn;
+    height:100%;
+    padding-top: 2%;
+}
+#leftSide{
+    /*animation: 1s ease-out 0s 1 fullToCenter;*/
+    background: rgb(106, 179, 225);
+    width: 49%;
+    display: inline-block;
+    height:100%;
+}
+#rightSide{
+    /*animation: 1s ease-out 0s 1 noneToCenter;*/
+    background: rgb(194, 76, 86);
+    width: 49%;
+    display: inline-block;
+    height:100%;
+}
+#wSymbol{
+    color: #6ab3e1;
+    font-size: 8em;
+    position:relative;
+    top:-10vh;
+}
+#wins{
+    position:relative;
+    top:-10vh;
+}
+#leftName{
+    width:30%;
+    display: inline-block;
+}
+#vsName{
+    position:relative;
+    top:-10vh;
+}
+#scores{
+    position:relative;
+    top:-10vh;
+}
+#vs{
+    width:20%;
+    display: inline-block;
+}
+#rightName{
+    width:30%;
+    display: inline-block;
+}
+#leftScore{
+    width:30%;
+    margin-right: 10vw;
+    display: inline-block;
+}
+#rightScore{
+    width:30%;
+    margin-left: 10vw;
+    display: inline-block;
+}

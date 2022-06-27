@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width user-scalable=no" />
+    <meta charset="utf-8">
+    <title>Start Screen</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="baseClient.js"></script>
+    <link rel="stylesheet" href="startStyle.css">
+    <link rel="stylesheet" href="scoreScreen.css">
+</head>
+
+<body id = "Body">
+    <div id = "topTop">
+        <div id = "found">Match Done</div>
+    </div>
+<div id = "topDisplay">
+    <div id = "leftSide"></div>
+    <div id = "rightSide"></div>
+</div>
+<div id = "main">
+        
+        <div id = "wSymbol"></div>
+        <div id = "wins"></div>
+        <div id = "vsName">
+            <div id="leftName"></div>
+            <div id="vs"></div>
+            <div id="rightName"></div>
+        </div>
+        <div id = "scores">
+            <div id="leftScore"></div>
+            <div id="rightScore"></div>
+        </div>
+    <button onclick="setTimeout(home,200)" id ="submit">Continue</button>
+</div>
+</body>
+<script>
+    var symbols = ["★","⨯"];
+    var winText = ["You win!","You lose.."];
+    socket.emit("getScore",(response) => {
+        let tempBar = response[0]+50-response[1];
+        if (tempBar>50){
+            document.getElementById("wSymbol").innerHTML = symbols[0];
+            document.getElementById("wins").innerHTML = winText[0];
+        }else{
+            document.getElementById("wSymbol").innerHTML = symbols[1];
+            document.getElementById("wins").innerHTML = winText[1];
+        }
+        document.getElementById("leftSide").style.width = (tempBar-1)+"%";
+        document.getElementById("rightSide").style.width = (99-tempBar)+"%";
+
+        document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
+        document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+        document.getElementById("leftScore").innerHTML=response[0];
+        document.getElementById("rightScore").innerHTML=response[1];
+    });
+    function home(){
+        socket.emit("changingPage","");
+    }
+    socket.on("changeAccept",(newPage)=>{
+        document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+        setTimeout(function(){document.location.href = "./"+newPage;},1000);
+    });
+    /*
+    document.getElementById("oppName").innerHTML=sessionStorage.getItem("opName");
+    var voted = false;
+    function button(index){
+        if (voted==false){
+            voted = true;
+            switch(index) {
+                case 0:
+                    socket.emit("vote",0);
+                    //socket.emit("changingPage","operation");
+                    document.getElementById("but1").style.background = "#a3e695";
+                    document.getElementById("but2").style.background = "#bdbdbd";
+                    document.getElementById("but3").style.background = "#bdbdbd";
+                    break;
+                case 1:
+                    socket.emit("vote",1);
+                    //socket.emit("changingPage","swipe");
+                    document.getElementById("but2").style.background = "#a3e695";
+                    document.getElementById("but1").style.background = "#bdbdbd";
+                    document.getElementById("but3").style.background = "#bdbdbd";
+                    break;
+                case 2:
+                    socket.emit("vote",2);
+                    //socket.emit("changingPage","touchNumber");
+                    document.getElementById("but3").style.background = "#a3e695";
+                    document.getElementById("but1").style.background = "#bdbdbd";
+                    document.getElementById("but2").style.background = "#bdbdbd";
+                    break;
+            }
+            setTimeout(() => {
+                document.getElementById("but1").classList.remove("clickable");
+                document.getElementById("but2").classList.remove("clickable");
+                document.getElementById("but3").classList.remove("clickable");
+            }, 500);
+        }
+    }
+    socket.on("gay",()=>{
+        console.log("gay");
+    });
+
+});
+    /*
+    
+    socket.emit("hello");
+    socket.on("tokenGen",(token)=>{
+        sessionStorage.setItem("token",token);    
+    });
+
+    var waiting = false;
+    function play(){
+        if (document.getElementById("name").value != "" && waiting == false){
+            console.log(document.getElementById("name").value);
+            sessionStorage.setItem("name",document.getElementById("name").value);
+            document.getElementById("name").disabled = true;
+            document.getElementById("submit").style.display = "none";
+            document.getElementById("submit").style.display = "none";
+            document.getElementById("wait").style.display = "block";
+            waiting = true;
+            socket.emit("changingPage","operation");
+            //setTimeout(nextPage,5000);
+        }
+    }
+    socket.on("changeAccept",()=>{
+        setTimeout(nextPage,5000);
+    });
+    function nextPage(){
+        document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+        setTimeout(function(){document.location.href = "./operation";},1000);
+    }
+    */
+</script>
+</html>

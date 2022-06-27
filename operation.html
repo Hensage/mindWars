@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width user-scalable=no" />
+    <meta charset="utf-8">
+    <title>Operations</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="baseClient.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="operation.css">
+</head>
+
+<body id = "Body">
+<div id = "topTop">
+        <div id = "leftName">
+            unsure
+        </div>
+        <div id = "time">
+            <article class="clock">
+                <div class="seconds-container">
+                  <div class="seconds"></div>
+                </div>
+              </article>
+        </div>
+        <div id = "rightName">
+            unsure
+        </div>
+</div>
+<div id = "topDisplay">
+
+    <div id = "leftSide">
+
+    </div>
+    <div id = "rightSide">
+
+    </div>
+</div>
+<div id = "game">
+    <div id = "equation">
+        <div class = "character" id="num1">2</div>
+        <div class = "character" id="gap">□</div>
+        <div class = "character" id="num2">2</div>
+        <div class = "character" id="equal">=</div>
+        <div class = "character" id="num3">4</div>
+    </div>
+    <div id = "buttons">
+        <div class = "button" id = "but1" onclick="button(0)">+</div>
+        <div class = "button" id = "but2" onclick="button(1)">-</div>
+        <div class = "button" id = "but3" onclick="button(2)">x</div>
+        <div class = "button" id = "but4" onclick="button(3)">÷</div>
+    </div>
+</div>
+</body>
+<script>
+    var ranNum;
+    var score = 50;
+    var nums;
+    var symbols = ["+","-","x","÷"]
+    setUp();
+    document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
+    document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+    function button(index){
+        if (ranNum==index){
+            console.log("Well done");
+            document.getElementById("but"+(index+1)).style.backgroundColor = "green";
+            document.getElementById("gap").innerHTML = symbols[index];
+            socket.emit("point",2);
+            /*
+            score+=2;
+            document.getElementById("leftSide").style.width = (score-1)+"%";
+            document.getElementById("rightSide").style.width = (99-score)+"%";
+            */
+            setTimeout(setUp,100);
+        }else{
+            document.getElementById("but"+(index+1)).style.backgroundColor = "rgb(194, 76, 86)";
+            socket.emit("point",-2);
+            /*
+            score-=2;
+            document.getElementById("leftSide").style.width = (score-1)+"%";
+            document.getElementById("rightSide").style.width = (99-score)+"%";
+            */
+        }
+    }
+    function setUp(){
+        ranNum = Math.floor(Math.random()*4);
+        nums = [0,0,0]
+        if (ranNum == 0){
+            nums = [Math.ceil(Math.random()*10),Math.ceil(Math.random()*10),0];
+            if (nums[0]==2&&nums[1]==2){
+                nums[0]++;
+            }
+            nums[2]=eval(nums[0]+nums[1]);
+        }else if (ranNum == 1){
+            nums = [0,Math.ceil(Math.random()*10),Math.ceil(Math.random()*10)];
+            nums[0]=eval(nums[1]+nums[2]);
+        }else if (ranNum == 2){
+            nums = [Math.ceil(Math.random()*9)+1,Math.ceil(Math.random()*9)+1,0];
+            nums[2]=eval(nums[0]*nums[1]);
+        }else{
+            nums = [0,Math.ceil(Math.random()*9)+1,Math.ceil(Math.random()*10)];
+            nums[0]=eval(nums[1]*nums[2]);
+        }
+        document.getElementById("num1").innerHTML = nums[0];
+        document.getElementById("num2").innerHTML = nums[1];
+        document.getElementById("num3").innerHTML = nums[2];
+        document.getElementById("but1").style.backgroundColor = "rgb(106, 179, 225)";
+        document.getElementById("but2").style.backgroundColor = "rgb(106, 179, 225)";
+        document.getElementById("but3").style.backgroundColor = "rgb(106, 179, 225)";
+        document.getElementById("but4").style.backgroundColor = "rgb(106, 179, 225)";
+        document.getElementById("gap").innerHTML = "□";
+    }
+    socket.on("updateScores",(score)=>{
+        console.log(score)
+        document.getElementById("leftSide").style.width = (score-1)+"%";
+        document.getElementById("rightSide").style.width = (99-score)+"%";
+    });
+    socket.on("changeAccept",(newPage)=>{
+    document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    setTimeout(function(){document.location.href = "./"+newPage;},1000);
+    });
+</script>
+</html>

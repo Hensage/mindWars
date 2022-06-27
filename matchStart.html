@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width user-scalable=no" />
+    <meta charset="utf-8">
+    <title>Start Screen</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="baseClient.js"></script>
+    <link rel="stylesheet" href="startStyle.css">
+    <link rel="stylesheet" href="matchStart.css">
+</head>
+
+<body id = "Body">
+    <div id = "topTop">
+        <div id = "found">Opponent Found!</div>
+    </div>
+<div id = "topDisplay">
+    <div id = "leftSide"></div>
+</div>
+<div id = "main">
+    <div id="opponentText">
+        <div id = "vs">VS</div>
+        <div id = "oppName">Unknown</div>
+        <!--<div id = "oppName">ELO Unknown</div>-->
+    </div>
+    <div id="games" >
+        Pick a game...
+        <div id = "buttons">
+            <div class = "button clickable" id = "but1" onclick="button(0)">
+                <div class ="gameSymbol" id = "sym1">+</div>
+                <div class ="gameName" id="name1">Missing Maths</div>
+            </div>
+            <div class = "button clickable" id = "but2" onclick="button(1)">
+                <div class ="gameSymbol" id = "sym2">↑</div>
+                <div class ="gameName" id="name2">Swipe Says</div>
+            </div>
+            <div class = "button clickable" id = "but3" onclick="button(2)">
+                <div class ="gameSymbol" id = "sym3">123</div>
+                <div class ="gameName" id="name3">Quick Counting</div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    var games = [["+","Missing Maths"],["↑","Swipe Says"],["123","Quick Counting"],["B","Flag To Flag"]];
+    socket.emit("getGames",(response) => {
+        document.getElementById("sym1").innerHTML = games[response[0]][0]
+        document.getElementById("name1").innerHTML = games[response[0]][1]
+
+        document.getElementById("sym2").innerHTML = games[response[1]][0]
+        document.getElementById("name2").innerHTML = games[response[1]][1]
+
+        document.getElementById("sym3").innerHTML = games[response[2]][0]
+        document.getElementById("name3").innerHTML = games[response[2]][1]
+    });
+    document.getElementById("oppName").innerHTML=sessionStorage.getItem("opName");
+    var voted = false;
+    function button(index){
+        if (voted==false){
+            voted = true;
+            switch(index) {
+                case 0:
+                    socket.emit("vote",0);
+                    //socket.emit("changingPage","operation");
+                    document.getElementById("but1").style.background = "#a3e695";
+                    document.getElementById("but2").style.background = "#bdbdbd";
+                    document.getElementById("but3").style.background = "#bdbdbd";
+                    break;
+                case 1:
+                    socket.emit("vote",1);
+                    //socket.emit("changingPage","swipe");
+                    document.getElementById("but2").style.background = "#a3e695";
+                    document.getElementById("but1").style.background = "#bdbdbd";
+                    document.getElementById("but3").style.background = "#bdbdbd";
+                    break;
+                case 2:
+                    socket.emit("vote",2);
+                    //socket.emit("changingPage","touchNumber");
+                    document.getElementById("but3").style.background = "#a3e695";
+                    document.getElementById("but1").style.background = "#bdbdbd";
+                    document.getElementById("but2").style.background = "#bdbdbd";
+                    break;
+            }
+            setTimeout(() => {
+                document.getElementById("but1").classList.remove("clickable");
+                document.getElementById("but2").classList.remove("clickable");
+                document.getElementById("but3").classList.remove("clickable");
+            }, 500);
+        }
+    }
+    socket.on("gay",()=>{
+        console.log("gay");
+    });
+    socket.on("changeAccept",(newPage)=>{
+    document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    setTimeout(function(){document.location.href = "./"+newPage;},1000);
+});
+    /*
+    
+    socket.emit("hello");
+    socket.on("tokenGen",(token)=>{
+        sessionStorage.setItem("token",token);    
+    });
+
+    var waiting = false;
+    function play(){
+        if (document.getElementById("name").value != "" && waiting == false){
+            console.log(document.getElementById("name").value);
+            sessionStorage.setItem("name",document.getElementById("name").value);
+            document.getElementById("name").disabled = true;
+            document.getElementById("submit").style.display = "none";
+            document.getElementById("submit").style.display = "none";
+            document.getElementById("wait").style.display = "block";
+            waiting = true;
+            socket.emit("changingPage","operation");
+            //setTimeout(nextPage,5000);
+        }
+    }
+    socket.on("changeAccept",()=>{
+        setTimeout(nextPage,5000);
+    });
+    function nextPage(){
+        document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+        setTimeout(function(){document.location.href = "./operation";},1000);
+    }
+    */
+</script>
+</html>

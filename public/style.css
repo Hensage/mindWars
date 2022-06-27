@@ -1,0 +1,131 @@
+html, body {margin: 0; width:100%; height: 100%; overflow: hidden; overscroll-behavior-x: none;overscroll-behavior-y: none;}
+@keyframes slideInFromTop {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes fullToCenter {
+    from { width: 98%; }
+    to   { width: 49%; }
+}
+@keyframes noneToCenter {
+    from { width: 0%; }
+    to   { width: 49%; }
+}
+
+body{
+    max-width: 100%;
+    height:100vh;
+    background: rgb(219, 224, 225);
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select:none;
+    user-select:none;
+    -o-user-select:none;
+}
+#game{
+    max-width: 90%;
+    margin: 0 5%;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+#topTop{
+    height:6vh;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.7rem;
+    background:#aaaaaa;
+}
+#leftName{
+    animation: 1s ease-out 0s 1 fadeIn;
+    width: 28%;
+    display: inline-block;
+    position: relative;
+    top:-25%;
+    height: 100%;
+}
+#time{
+    animation: 1s ease-out 0s 1 fadeIn;
+    width: 20%;
+    display: inline-block;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+.clock {
+    border-radius: 50%;
+    background: rgb(255, 255, 255);
+    background-size: 88%;
+    height: 6vh;
+    margin-left: calc(50% - 3vh);
+    /*padding-bottom: 31%;*/
+    position: relative;
+    width:6vh;
+    overflow: hidden;
+  }
+
+  .minutes-container, .hours-container, .seconds-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+  .seconds {
+    background: #000;
+    height: 50%;
+    left: 49.5%;
+    position: absolute;
+    top: 0%;
+    transform-origin: 50% 80%;
+    width: 5%;
+    z-index: 8;
+  }
+  @keyframes rotate {
+    100% {
+      transform: rotateZ(360deg);
+    }
+  }
+  .seconds-container {
+    animation: rotate 30s infinite linear;
+  }
+#rightName{
+    animation: 1s ease-out 0s 1 fadeIn;
+    width: 28%;
+    display: inline-block;
+    position: relative;
+    top:-25%;
+    height: 100%;
+}
+#topDisplay{
+    height:5vh;
+}
+#leftSide{
+    animation: 1s ease-out 0s 1 fullToCenter;
+    background: rgb(106, 179, 225);
+    width: 49%;
+    display: inline-block;
+    height:100%;
+}
+#rightSide{
+    animation: 1s ease-out 0s 1 noneToCenter;
+    background: rgb(194, 76, 86);
+    width: 49%;
+    display: inline-block;
+    height:100%;
+}
+#game{
+    animation: 1s ease-out 0s 1 fadeIn;
+}

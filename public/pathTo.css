@@ -1,0 +1,47 @@
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+#game{
+    margin-top: 10%;
+}
+.row{
+    display: inline-flex;
+    margin-top: -2%;
+}
+.button{
+    font-size: 2rem;
+    background:#6ab3e1;
+    box-shadow: 0px 10px 50px -20px #416594;
+    width: min(20vw,20vh);
+    height:min(20vw,20vh);
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    display: flex;
+    transition: background-color 0.5s ease;
+}
+.imgSym{
+    height:100%;
+    width:100%;
+}
+#submit{
+    background: rgb(106, 179, 225);
+    border-radius: 4px;
+    height: 8vh;
+    font-size: 1.7rem;
+    margin: 5vh 5vh;
+}
+/*
+.button:active {
+    margin: 0%;
+    width: 30%;
+    height: 21vh;
+    background:rgb(71, 135, 174);
+    box-shadow: 0px 0px 0px -20px #416594;
+}
+*/

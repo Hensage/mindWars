@@ -1,0 +1,62 @@
+@keyframes fadeIn{
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+#topTop{
+    justify-content: center;
+    align-items: center;
+}
+#found{
+    animation: 0.5s ease-out 0s 1 fadeIn;
+    height:100%;
+    padding-top: 2%;
+}
+#main{
+    animation: 0.5s ease-out 0s 1 fadeIn;
+    padding-top: 5vh;
+}
+#opponentText{
+    font-size: 1.8em;
+}
+#games{
+    margin-top: 15vh;
+}
+#buttons{
+    font-size: 1em;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    
+}
+.button{
+    background:rgb(106, 179, 225);
+    box-shadow: 0px 10px 50px -20px #416594;
+    margin: 2% 2% 2% 2%;
+    width: 30%;
+    height:18vh;
+    box-sizing: border-box;
+    flex-direction: column;
+    
+}
+.gameSymbol{
+    display: flex;
+    position: static;
+    width: 100%;
+    font-size: 1.5em;
+    justify-content: center;
+    align-items: center;
+    height: 50%;
+}
+.gameName{
+    display: block;
+    width: 100%;
+    font-size: 0.8em;
+    height: auto;
+}
+.button.clickable:active {
+    margin: 0%;
+    width: 34%;
+    height:19vh;
+    background:rgb(71, 135, 174);
+    box-shadow: 0px 0px 0px -20px #416594;
+}

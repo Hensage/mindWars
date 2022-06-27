@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width user-scalable=no" />
+    <meta charset="utf-8">
+    <title>Start Screen</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="baseClient.js"></script>
+    <link rel="stylesheet" href="startStyle.css">
+</head>
+
+<body id = "Body">
+    <div id = "topTop">
+        <div id = "title">Mind Wars</div>
+    </div>
+<div id = "topDisplay">
+    <div id = "leftSide"></div>
+</div>
+<div id = "main">
+    <div id="logo">PLACE LOGO</div>
+    <form id="yourForm"><input type="text" id="name" placeholder="Enter Name."></form>
+    <button onclick="setTimeout(play,200)" id ="submit">Start playing</button>
+    <p id="wait" style="display:none">Finding opponent...</p>
+</div>
+</body>
+<script>
+    
+    document.getElementById("Body").requestFullscreen();
+    socket.emit("hello");
+    socket.on("tokenGen",(token)=>{
+        sessionStorage.setItem("token",token);    
+    });
+
+    var waiting = false;
+    function play(){
+        if (document.getElementById("name").value != "" && waiting == false){
+            console.log(document.getElementById("name").value);
+            sessionStorage.setItem("name",document.getElementById("name").value);
+            document.getElementById("name").disabled = true;
+            document.getElementById("submit").style.display = "none";
+            document.getElementById("submit").style.display = "none";
+            document.getElementById("wait").style.display = "block";
+            waiting = true;
+            socket.emit("search",document.getElementById("name").value);
+            //socket.emit("changingPage","matchStart");
+            //setTimeout(nextPage,5000);
+        }
+    }
+    socket.on("foundOp",(userN)=>{
+        sessionStorage.setItem("opName",userN);
+        document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+        setTimeout(function(){document.location.href = "./matchStart";},1000);
+    });
+    socket.on("changeAccept",(newPage)=>{
+        document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+        setTimeout(function(){document.location.href = "./"+newPage;},1000);
+    });
+    window.addEventListener("submit",function (e) {
+        e.preventDefault();
+        play();
+    });
+</script>
+</html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width user-scalable=no" />
+    <meta charset="utf-8">
+    <title>Operations</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="baseClient.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="touchNumber.css">
+</head>
+
+<body id = "Body">
+<div id = "topTop">
+        <div id = "leftName">
+            unsure
+        </div>
+        <div id = "time">
+            <article class="clock">
+                <div class="seconds-container">
+                  <div class="seconds"></div>
+                </div>
+              </article>
+        </div>
+        <div id = "rightName">
+            unsure
+        </div>
+</div>
+<div id = "topDisplay">
+
+    <div id = "leftSide">
+
+    </div>
+    <div id = "rightSide">
+
+    </div>
+</div>
+<div id = "game">
+    <div id = "buttons">
+        <div class = "button" id = "but1" onclick="button(1)">1</div>
+        <div class = "button" id = "but2" onclick="button(2)">2</div>
+        <div class = "button" id = "but3" onclick="button(3)">3</div>
+        <div class = "button" id = "but4" onclick="button(4)">4</div>
+        <div class = "button" id = "but5" onclick="button(5)">5</div>
+        <div class = "button" id = "but6" onclick="button(6)">6</div>
+        <div class = "button" id = "but7" onclick="button(7)">7</div>
+        <div class = "button" id = "but8" onclick="button(8)">8</div>
+        <div class = "button" id = "but9" onclick="button(9)">9</div>
+    </div>
+</div>
+</body>
+<script>
+    var ranNum;
+    var ranBool;
+    var current= 0;
+    var score = 50;
+    var nums;
+    var numbers = [1,2,3,4,5,6,7,8,9];
+    var colours = ["#4871a0","#a54d4d"];
+    setUp();
+    document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
+    document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+    function button(index){
+        
+        if (document.getElementById("but"+index).innerHTML == current+1){
+            document.getElementById("but"+index).style.animation = "0.5s ease-out 0s 1 fadeOut normal forwards";
+            //document.getElementById("but"+index).style.visibility = 'hidden';
+            current -= (2*ranBool)-1;
+            socket.emit("point",1);
+            /*
+            score+=1;
+            document.getElementById("leftSide").style.width = (score-1)+"%";
+            document.getElementById("rightSide").style.width = (99-score)+"%";
+            */
+        }else{
+            socket.emit("point",-1);
+            /*
+            score-=1;
+            document.getElementById("leftSide").style.width = (score-1)+"%";
+            document.getElementById("rightSide").style.width = (99-score)+"%";
+            */
+        }
+        console.log([document.getElementById("but"+index).innerHTML,current]);
+        if (current == -1 || current == 9){
+            setTimeout(setUp,500);
+        }
+        /*
+        if (ranNum==index){
+            console.log("Well done");
+            document.getElementById("but"+(index+1)).style.backgroundColor = "green";
+            document.getElementById("gap").innerHTML = symbols[index];
+            score+=2;
+            document.getElementById("leftSide").style.width = (score-1)+"%";
+            document.getElementById("rightSide").style.width = (99-score)+"%";
+            setTimeout(setUp,100);
+        }else{
+            document.getElementById("but"+(index+1)).style.backgroundColor = "rgb(194, 76, 86)";
+            score-=2;
+            document.getElementById("leftSide").style.width = (score-1)+"%";
+            document.getElementById("rightSide").style.width = (99-score)+"%";
+        }
+        */
+    }
+    function setUp(){
+        ranBool = Math.floor(Math.random()*2);  
+        numbers = [1,2,3,4,5,6,7,8,9];
+        for (i = 1;i<10;i++){
+            ranNum = Math.floor(Math.random()*numbers.length);
+            document.getElementById("but"+i).innerHTML = numbers[ranNum];
+            numbers.splice(ranNum,1);
+            document.getElementById("but"+i).style.background=colours[ranBool];
+            document.getElementById("but"+i).style.animation = "0.5s ease-out 0s 1 fadeIn";
+            document.getElementById("but"+i).style.visibility = 'visible';
+        }
+        current = (ranBool*8);
+    }
+    socket.on("updateScores",(score)=>{
+        document.getElementById("leftSide").style.width = (score-1)+"%";
+        document.getElementById("rightSide").style.width = (99-score)+"%";
+    });
+    socket.on("changeAccept",(newPage)=>{
+    document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    setTimeout(function(){document.location.href = "./"+newPage;},1000);
+    });
+</script>
+</html>

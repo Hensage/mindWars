@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width user-scalable=no" />
+    <meta charset="utf-8">
+    <title>Start Screen</title>
+    <link rel="stylesheet" href="startStyle.css">
+</head>
+
+<body id = "Body">
+    <div id = "topTop">
+        <div id = "title">Mind Wars</div>
+    </div>
+<div id = "topDisplay">
+    <div id = "leftSide"></div>
+</div>
+<div id = "main">
+    <div id="logo">PLACE LOGO</div>
+    <form id="yourForm"><input type="text" id="name" placeholder="Enter Name."></form>
+    <button onclick="play()" id ="submit">Start playing</button>
+    <p id="wait" style="display:none">Finding opponent...</p>
+</div>
+</body>
+<script>
+    console.log(window.location.host);
+    ws = new WebSocket("ws://"+window.location.host+":6970");
+    ws.binaryType = "arraybuffer";
+    //ws.onmessage = ({ data }) => alert(new TextDecoder().decode(new Uint8Array(data)));
+    ws.onmessage = ({ data }) => {
+        if (typeof data != "string"){
+            var d = new TextDecoder().decode(new Uint8Array(data));
+        }else{
+            var d = data;
+        }
+        d = d.split("|");
+        var para = JSON.parse(d[1]);
+    };
+    function play(){
+        ws.send("m|"+JSON.stringify({"name":document.getElementById("name").value}));
+        
+    }
+    window.addEventListener("submit",function (e) {
+        e.preventDefault();
+        play();
+    });
+    function stayAlive(){
+        ws.send("a|{}");
+    }
+    setInterval(stayAlive,500);
+</script>
+</html>

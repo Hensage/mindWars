@@ -1,0 +1,253 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width user-scalable=no" />
+    <meta charset="utf-8">
+    <title>Operations</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="baseClient.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pathTo.css">
+</head>
+
+<body id = "Body">
+<div id = "topTop">
+        <div id = "leftName">
+            unsure
+        </div>
+        <div id = "time">
+            <article class="clock">
+                <div class="seconds-container">
+                  <div class="seconds"></div>
+                </div>
+              </article>
+        </div>
+        <div id = "rightName">
+            unsure
+        </div>
+</div>
+<div id = "topDisplay">
+
+    <div id = "leftSide">
+
+    </div>
+    <div id = "rightSide">
+
+    </div>
+</div>
+<div id = "game">
+    <div id = "buttons">
+        <div class="row">
+            <div class = "button" id = "but1"><div class = "imgSym">B</div></div>
+            <div class = "button" id = "but2"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but3"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but4"><div class = "imgSym"></div></div>
+        </div>
+        <div class="row">
+            <div class = "button" id = "but5"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but6"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but7"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but8"><div class = "imgSym"></div></div>
+        </div>
+        <div class="row">
+            <div class = "button" id = "but9"><div class = "imgSym">B</div></div>
+            <div class = "button" id = "but10"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but11"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but12"><div class = "imgSym"></div></div>
+        </div>
+        <div class="row">
+            <div class = "button" id = "but13"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but14"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but15"><div class = "imgSym"></div></div>
+            <div class = "button" id = "but16"><div class = "imgSym"></div></div>
+        </div>
+    </div>
+    <button id="submit" onclick="memorised()">Memorised</button>
+</div>
+</body>
+<script>
+    var touching=false;
+    var flagVis = false;
+    var completed = false;
+    var starGot = false;
+    var lastTouch = -1;
+    var lastGreen = -1;
+    var coloured = [false,false,false,false,
+                    false,false,false,false,
+                    false,false,false,false,
+                    false,false,false,false];
+    document.getElementById("Body").addEventListener('touchstart',touchStart, false);
+    document.getElementById("Body").addEventListener('touchend', touchEnd, false);
+    window.addEventListener('touchmove',touchMove, { passive: false });
+    function touchStart(ev){
+        if (flagVis){
+            touching=true;
+        }
+    }
+    function touchEnd(ev){
+        if (completed == false){
+            touching=false;
+            starGot = false;
+            lastTouch = -1;
+            lastGreen = -1;
+            coloured = [false,false,false,false,
+                        false,false,false,false,
+                        false,false,false,false,
+                        false,false,false,false];
+            buts = document.getElementsByClassName("button");
+            for (i=0;i<buts.length;i++){
+                currBut = buts.item(i);
+                currBut.style.background = "#6ab3e1";
+            }
+        }
+    }
+
+    function touchMove(ev){
+        if (touching){
+            var good = false;
+            touch = ev.changedTouches[0];
+            buts = document.getElementsByClassName("button");
+            for (i=0;i<buts.length;i++){
+                currBut = buts.item(i)
+                leftTrue = (currBut.offsetLeft < touch.pageX && currBut.offsetLeft + currBut.offsetWidth > touch.pageX);
+                topTrue = (currBut.offsetTop < touch.pageY && currBut.offsetTop + currBut.offsetHeight > touch.pageY);
+                if (leftTrue && topTrue){
+                    good = true;
+                    if (coloured[i]==false){
+                        if (lastTouch == lastGreen){
+                            if (bombs[0]==i ||bombs[1]==i ){
+                                currBut.style.background = "red";
+                                touching=false;
+                                socket.emit("point",-2);
+                                setTimeout(setUp,500);
+                            }else if ((lastTouch==-1 && (flags[0]==i||flags[1]==i)) || lastTouch!=-1){
+                                //console.log(i+" gone Green");
+                                if((flags[0]==i||flags[1]==i)&&lastTouch!=-1 && lastGreen!=i){
+                                    touching=false;
+                                    completed = true;
+                                    if (starGot){
+                                        socket.emit("point",2);
+                                    }else{
+                                        socket.emit("point",1);
+                                    }
+                                    setTimeout(setUp,500);
+                                }
+                                if (star == i){
+                                    starGot = true;
+                                }
+                                currBut.style.background = "green";
+                                coloured[i] = true;
+                                lastTouch = i;
+                                lastGreen = i;
+
+                            }
+                        }else{
+                            console.log("last touched "+ lastTouch);
+                            console.log("should have been "+ lastGreen);
+                            touchEnd(undefined);
+                        }
+                    }else if (i != lastTouch && lastTouch != -1){
+                        //console.log(i+" was already green");
+                        lastTouch = i;
+                        //touchEnd(undefined);
+                    }
+                }
+            }
+            if (!good){
+                touchEnd(undefined);
+            }
+        }
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+    }
+    var flags = [0,0];
+    var bombs = [0,0];
+    var star = 0;
+    var ava = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+    function setUp(){
+        completed = false;
+        touchEnd(undefined);
+
+        document.getElementById("submit").style.display="block";
+        flagVis=false;
+
+        ava = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+        let inde;
+        
+        inde = Math.floor(Math.random()*ava.length);
+        flags[0] = ava[inde]
+        ava.splice(inde,1);
+        inde = Math.floor(Math.random()*ava.length);
+        flags[1] = ava[inde]
+        ava.splice(inde,1);
+        console.log(flags);
+        console.log(ava);
+        inde = Math.floor(Math.random()*ava.length);
+        bombs[0] = ava[inde]
+        ava.splice(inde,1);
+        inde = Math.floor(Math.random()*ava.length);
+        bombs[1] = ava[inde]
+        ava.splice(inde,1);
+        console.log(bombs);
+        console.log(ava);
+        inde = Math.floor(Math.random()*ava.length)
+        star = ava[inde]
+        ava.splice(inde,1);
+        console.log(star);
+        console.log(ava);
+        for (i=1;i<17;i++){
+            document.getElementById("but"+i).innerHTML="";
+        }
+        document.getElementById("but"+(bombs[0]+1)).innerHTML="B";
+        document.getElementById("but"+(bombs[1]+1)).innerHTML="B";
+    }
+    function memorised(){
+        for (i=1;i<17;i++){
+            document.getElementById("but"+i).innerHTML="";
+        }
+        document.getElementById("but"+(flags[0]+1)).innerHTML="F";
+        document.getElementById("but"+(flags[1]+1)).innerHTML="F";
+        document.getElementById("but"+(star+1)).innerHTML="S";
+        flagVis = true;
+        document.getElementById("submit").style.display="none";
+    }
+    setUp();
+    /*
+    var ranNum;
+    var ranBool;
+    var current= 0;
+    var score = 50;
+    var nums;
+    var numbers = [1,2,3,4,5,6,7,8,9];
+    var colours = ["#4871a0","#a54d4d"];
+    setUp();
+    document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
+    document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+
+    function setUp(){
+        ranBool = Math.floor(Math.random()*2);  
+        numbers = [1,2,3,4,5,6,7,8,9];
+        for (i = 1;i<10;i++){
+            ranNum = Math.floor(Math.random()*numbers.length);
+            document.getElementById("but"+i).innerHTML = numbers[ranNum];
+            numbers.splice(ranNum,1);
+            document.getElementById("but"+i).style.background=colours[ranBool];
+            document.getElementById("but"+i).style.animation = "0.5s ease-out 0s 1 fadeIn";
+            document.getElementById("but"+i).style.visibility = 'visible';
+        }
+        current = (ranBool*8);
+    }
+    */
+    socket.on("updateScores",(score)=>{
+        document.getElementById("leftSide").style.width = (score-1)+"%";
+        document.getElementById("rightSide").style.width = (99-score)+"%";
+    });
+    socket.on("changeAccept",(newPage)=>{
+        document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+        document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+        document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+        document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+        setTimeout(function(){document.location.href = "./"+newPage;},1000);
+    });
+</script>
+</html>

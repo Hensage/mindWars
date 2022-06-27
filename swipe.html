@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width user-scalable=no" />
+    <meta charset="utf-8">
+    <title>Operations</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="baseClient.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="swipe.css">
+</head>
+
+<body id = "Body" style="touch-action: none;">
+<div id = "topTop">
+        <div id = "leftName">
+            unsure
+        </div>
+        <div id = "time">
+            <article class="clock">
+                <div class="seconds-container">
+                  <div class="seconds"></div>
+                </div>
+              </article>
+        </div>
+        <div id = "rightName">
+            unsure
+        </div>
+</div>
+<div id = "topDisplay">
+
+    <div id = "leftSide">
+
+    </div>
+    <div id = "rightSide">
+
+    </div>
+</div>
+<div id = "game">
+    <div id = "arrow"><div id = "arrowText"></div></div>
+    <div id = "answer"></div>
+</div>
+</body>
+<script>
+    var ranNum;
+    var ranBool;
+    var oldRan = [];
+    var score = 50;
+    var symbols = ["➔","➔","➔","➔"]
+    var colours = ["#a54d4d","#4871a0"];
+    var nums;
+
+    setUp();
+    document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
+    document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+    function setUp(){
+        ranNum = Math.floor(Math.random()*4);
+        ranBool = Math.floor(Math.random()*2);
+        document.getElementById("arrow").style.background = colours[ranBool];
+        //document.getElementById("arrow").innerHTML = symbols[ranNum];
+        /*
+        switch(ranNum){
+            case 0:
+                document.getElementById("arrowText").style.transform = "";
+                break;
+            case 1:
+                document.getElementById("arrowText").style.transform = "transform: scale(1, -1);";
+                break;
+            case 2:
+                document.getElementById("arrowText").style.transform = "scale(-1, 1);";
+                break;
+            case 3:
+                document.getElementById("arrowText").style.transform = "";
+                break;
+        }*/
+        document.getElementById("arrowText").style.transform = "rotate("+(ranNum*90)+"deg)";
+        document.getElementById("arrow").style.animation = "0.3s fadeIn";
+    }
+    var touch = [];
+    function onTouch(e){
+        e.preventDefault();
+        ev = e.changedTouches[0];
+        document.getElementById("answer").style.animation = "";
+        touch[0] = ev.pageX;
+        touch[1] = ev.pageY;
+        //console.log(touch);
+    }
+    function onTouchOff(e){
+        document.getElementById("arrow").style.animation ="";
+        ev = e.changedTouches[0];
+        if (touch.length ==2){
+            let rad = Math.atan2(ev.pageY-touch[1],ev.pageX-touch[0])+Math.PI+(Math.PI/4);
+            rad = Math.floor(rad/(Math.PI/2))%4;
+            let answer = ranNum;
+            if (ranBool == 0){
+                if (ranNum < 2){
+                    answer= ranNum+2;
+                }else{
+                    answer= ranNum-2;
+                }
+            }
+            if (rad == answer){
+                console.log("Well Done");
+                document.getElementById("answer").innerHTML = "✔";
+                document.getElementById("answer").style.color = "green";
+                document.getElementById("answer").style.animation = "0.5s fadeTemp";
+                socket.emit("point",2);
+                /*
+                score+=2;
+                document.getElementById("leftSide").style.width = (score-1)+"%";
+                document.getElementById("rightSide").style.width = (99-score)+"%";
+                */
+            }else{
+                console.log("no.");
+                document.getElementById("answer").innerHTML = "✘";
+                document.getElementById("answer").style.color = "red";
+                document.getElementById("answer").style.animation = "0.5s fadeTemp";
+                socket.emit("point",-2);
+                /*
+                score-=2;
+                document.getElementById("leftSide").style.width = (score-1)+"%";
+                document.getElementById("rightSide").style.width = (99-score)+"%";
+                */
+            }
+            let anims = ["slideOutFromLeft","slideOutFromTop","slideOutFromRight","slideOutFromDown"];
+            setTimeout(function(){document.getElementById("arrow").style.animation = "0.2s "+anims[rad]+" normal forwards";},50);
+            setTimeout(setUp,300);
+        }else{
+            console.log("Huh")
+        }
+        touch = [];
+    }
+    document.getElementById("Body").addEventListener('touchstart', onTouch, false);
+    document.getElementById("Body").addEventListener('touchend', onTouchOff, false);
+    socket.on("updateScores",(score)=>{
+        document.getElementById("leftSide").style.width = (score-1)+"%";
+        document.getElementById("rightSide").style.width = (99-score)+"%";
+    });
+    socket.on("changeAccept",(newPage)=>{
+    document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+    setTimeout(function(){document.location.href = "./"+newPage;},1000);
+    });
+</script>
+</html>
