@@ -4,7 +4,6 @@
     <meta name="viewport" content="width=device-width user-scalable=no" />
     <meta charset="utf-8">
     <title>Operations</title>
-    <script src="/socket.io/socket.io.js"></script>
     <script src="baseClient.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="touchNumber.css">
@@ -57,49 +56,50 @@
     var nums;
     var numbers = [1,2,3,4,5,6,7,8,9];
     var colours = ["#4871a0","#a54d4d"];
-    setUp();
     document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
     document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+
+    socket.onopen = () => {
+        base();
+        setUp();
+        socket.onmessage = ({ data }) => {
+            if (typeof data != "string"){
+                var d = new TextDecoder().decode(new Uint8Array(data));
+            }else{
+                var d = data;
+            }
+            d = d.split("|");
+            var para = JSON.parse(d[1]);
+            if (d[0]=="updateScores"){
+                console.log(para["score"])
+                document.getElementById("leftSide").style.width = (para["score"]-1)+"%";
+                document.getElementById("rightSide").style.width = (99-para["score"])+"%";
+            }else if (d[0]=="changeAccept"){
+                document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                setTimeout(function(){document.location.href = "./"+para["page"];},1000);
+            }else if (d[0]=="goAway"){
+                sessionStorage.clear();
+                window.location.replace("/");
+            }
+        }
+    };
+
     function button(index){
-        
         if (document.getElementById("but"+index).innerHTML == current+1){
             document.getElementById("but"+index).style.animation = "0.5s ease-out 0s 1 fadeOut normal forwards";
             //document.getElementById("but"+index).style.visibility = 'hidden';
             current -= (2*ranBool)-1;
-            socket.emit("point",1);
-            /*
-            score+=1;
-            document.getElementById("leftSide").style.width = (score-1)+"%";
-            document.getElementById("rightSide").style.width = (99-score)+"%";
-            */
+            socket.send("point|"+JSON.stringify({"num":1}));
         }else{
-            socket.emit("point",-1);
-            /*
-            score-=1;
-            document.getElementById("leftSide").style.width = (score-1)+"%";
-            document.getElementById("rightSide").style.width = (99-score)+"%";
-            */
+            socket.send("point|"+JSON.stringify({"num":-1}));
         }
         console.log([document.getElementById("but"+index).innerHTML,current]);
         if (current == -1 || current == 9){
             setTimeout(setUp,500);
         }
-        /*
-        if (ranNum==index){
-            console.log("Well done");
-            document.getElementById("but"+(index+1)).style.backgroundColor = "green";
-            document.getElementById("gap").innerHTML = symbols[index];
-            score+=2;
-            document.getElementById("leftSide").style.width = (score-1)+"%";
-            document.getElementById("rightSide").style.width = (99-score)+"%";
-            setTimeout(setUp,100);
-        }else{
-            document.getElementById("but"+(index+1)).style.backgroundColor = "rgb(194, 76, 86)";
-            score-=2;
-            document.getElementById("leftSide").style.width = (score-1)+"%";
-            document.getElementById("rightSide").style.width = (99-score)+"%";
-        }
-        */
     }
     function setUp(){
         ranBool = Math.floor(Math.random()*2);  
@@ -114,16 +114,5 @@
         }
         current = (ranBool*8);
     }
-    socket.on("updateScores",(score)=>{
-        document.getElementById("leftSide").style.width = (score-1)+"%";
-        document.getElementById("rightSide").style.width = (99-score)+"%";
-    });
-    socket.on("changeAccept",(newPage)=>{
-    document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    setTimeout(function(){document.location.href = "./"+newPage;},1000);
-    });
 </script>
 </html>

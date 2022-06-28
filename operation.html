@@ -4,8 +4,6 @@
     <meta name="viewport" content="width=device-width user-scalable=no" />
     <meta charset="utf-8">
     <title>Operations</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="baseClient.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="operation.css">
 </head>
@@ -51,6 +49,7 @@
     </div>
 </div>
 </body>
+<script src="baseClient.js"></script>
 <script>
     var ranNum;
     var score = 50;
@@ -59,12 +58,40 @@
     setUp();
     document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
     document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+    
+    socket.onopen = () => {
+        base();
+        socket.onmessage = ({ data }) => {
+            if (typeof data != "string"){
+                var d = new TextDecoder().decode(new Uint8Array(data));
+            }else{
+                var d = data;
+            }
+            d = d.split("|");
+            var para = JSON.parse(d[1]);
+            if (d[0]=="updateScores"){
+                console.log(para["score"])
+                document.getElementById("leftSide").style.width = (para["score"]-1)+"%";
+                document.getElementById("rightSide").style.width = (99-para["score"])+"%";
+            }else if (d[0]=="changeAccept"){
+                document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                setTimeout(function(){document.location.href = "./"+para["page"];},1000);
+            }else if (d[0]=="goAway"){
+                sessionStorage.clear();
+                window.location.replace("/");
+            }
+        }
+    };
+    
     function button(index){
         if (ranNum==index){
             console.log("Well done");
             document.getElementById("but"+(index+1)).style.backgroundColor = "green";
             document.getElementById("gap").innerHTML = symbols[index];
-            socket.emit("point",2);
+            socket.send("point|"+JSON.stringify({"num":2}));
             /*
             score+=2;
             document.getElementById("leftSide").style.width = (score-1)+"%";
@@ -73,7 +100,7 @@
             setTimeout(setUp,100);
         }else{
             document.getElementById("but"+(index+1)).style.backgroundColor = "rgb(194, 76, 86)";
-            socket.emit("point",-2);
+            socket.send("point|"+JSON.stringify({"num":-2}));
             /*
             score-=2;
             document.getElementById("leftSide").style.width = (score-1)+"%";
@@ -109,17 +136,5 @@
         document.getElementById("but4").style.backgroundColor = "rgb(106, 179, 225)";
         document.getElementById("gap").innerHTML = "□";
     }
-    socket.on("updateScores",(score)=>{
-        console.log(score)
-        document.getElementById("leftSide").style.width = (score-1)+"%";
-        document.getElementById("rightSide").style.width = (99-score)+"%";
-    });
-    socket.on("changeAccept",(newPage)=>{
-    document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    setTimeout(function(){document.location.href = "./"+newPage;},1000);
-    });
 </script>
 </html>

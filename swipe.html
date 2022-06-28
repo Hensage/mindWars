@@ -4,7 +4,6 @@
     <meta name="viewport" content="width=device-width user-scalable=no" />
     <meta charset="utf-8">
     <title>Operations</title>
-    <script src="/socket.io/socket.io.js"></script>
     <script src="baseClient.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="swipe.css">
@@ -48,34 +47,44 @@
     var symbols = ["➔","➔","➔","➔"]
     var colours = ["#a54d4d","#4871a0"];
     var nums;
+    var touch = [];
 
-    setUp();
-    document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
-    document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+    socket.onopen = () => {
+        base();
+        setUp();
+        document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
+        document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+        socket.onmessage = ({ data }) => {
+            if (typeof data != "string"){
+                var d = new TextDecoder().decode(new Uint8Array(data));
+            }else{
+                var d = data;
+            }
+            d = d.split("|");
+            var para = JSON.parse(d[1]);
+            if (d[0]=="updateScores"){
+                console.log(para["score"])
+                document.getElementById("leftSide").style.width = (para["score"]-1)+"%";
+                document.getElementById("rightSide").style.width = (99-para["score"])+"%";
+            }else if (d[0]=="changeAccept"){
+                document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                setTimeout(function(){document.location.href = "./"+para["page"];},1000);
+            }else if (d[0]=="goAway"){
+                sessionStorage.clear();
+                window.location.replace("/");
+            }
+        }
+    }
     function setUp(){
         ranNum = Math.floor(Math.random()*4);
         ranBool = Math.floor(Math.random()*2);
         document.getElementById("arrow").style.background = colours[ranBool];
-        //document.getElementById("arrow").innerHTML = symbols[ranNum];
-        /*
-        switch(ranNum){
-            case 0:
-                document.getElementById("arrowText").style.transform = "";
-                break;
-            case 1:
-                document.getElementById("arrowText").style.transform = "transform: scale(1, -1);";
-                break;
-            case 2:
-                document.getElementById("arrowText").style.transform = "scale(-1, 1);";
-                break;
-            case 3:
-                document.getElementById("arrowText").style.transform = "";
-                break;
-        }*/
         document.getElementById("arrowText").style.transform = "rotate("+(ranNum*90)+"deg)";
         document.getElementById("arrow").style.animation = "0.3s fadeIn";
     }
-    var touch = [];
     function onTouch(e){
         e.preventDefault();
         ev = e.changedTouches[0];
@@ -103,7 +112,7 @@
                 document.getElementById("answer").innerHTML = "✔";
                 document.getElementById("answer").style.color = "green";
                 document.getElementById("answer").style.animation = "0.5s fadeTemp";
-                socket.emit("point",2);
+                socket.send("point|"+JSON.stringify({"num":2}));
                 /*
                 score+=2;
                 document.getElementById("leftSide").style.width = (score-1)+"%";
@@ -114,7 +123,7 @@
                 document.getElementById("answer").innerHTML = "✘";
                 document.getElementById("answer").style.color = "red";
                 document.getElementById("answer").style.animation = "0.5s fadeTemp";
-                socket.emit("point",-2);
+                socket.send("point|"+JSON.stringify({"num":-2}));
                 /*
                 score-=2;
                 document.getElementById("leftSide").style.width = (score-1)+"%";
@@ -131,16 +140,6 @@
     }
     document.getElementById("Body").addEventListener('touchstart', onTouch, false);
     document.getElementById("Body").addEventListener('touchend', onTouchOff, false);
-    socket.on("updateScores",(score)=>{
-        document.getElementById("leftSide").style.width = (score-1)+"%";
-        document.getElementById("rightSide").style.width = (99-score)+"%";
-    });
-    socket.on("changeAccept",(newPage)=>{
-    document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-    setTimeout(function(){document.location.href = "./"+newPage;},1000);
-    });
+
 </script>
 </html>

@@ -1,19 +1,12 @@
 // JavaScript Document
-const tls = require('tls');
-tls.DEFAULT_MAX_VERSION = 'TLSv1.2';
 const express = require('express');
-const { PassThrough } = require('stream');
-const e = require('express');
-var username;
 var fs = require('fs');
+var WebSocketServer = require("ws").Server;
 var app = express();
-const http = require('http').Server(app);
-//var https = require('https');
-var privateKey  = fs.readFileSync('sslcert/domain.key', 'utf8');
-var certificate = fs.readFileSync('sslcert/domain.crt', 'utf8');
-var credentials = {key: privateKey, cert: certificate};
-//var httpsServer = https.Server(credentials, app);
-const io = require('socket.io')(http);
+const http = require('http');
+const htts = http.Server(app);
+
+
 app.use(express.static('public'));
 app.use(express.json());
 const router = express.Router();
@@ -67,6 +60,7 @@ class user{
 		this.playerNum = 0;
 		this.oldScore=0;
 		this.matchId=0;
+		this.lastcall = new Date();
 	}
 }
 class match{
@@ -94,8 +88,15 @@ var searchUser = undefined;
 
 var matches = [];
 
-io.on('connection', (socket) => { //WHEN PLAYER JOINS
-	//console.log("New "+socket.id)
+const port = 6969;
+//const server = http.createServer(express);
+//const wss = new WebSocket.Server({ server })
+wss = new WebSocketServer({port:6970});
+wss.binaryType = "arraybuffer";
+
+wss.on('connection', (socket) => { //WHEN PLAYER JOINS
+	socket.id = token();
+	/*
   	socket.on('disconnect', function() { //WHEN PLAYER DISCONNECTS
 		var p = users.filter(obj => {
 			return obj.sock.id === socket.id
@@ -131,152 +132,160 @@ io.on('connection', (socket) => { //WHEN PLAYER JOINS
 		console.log("DIS")
 		console.log(outputTokens());
   	});
-	socket.on('hello', () => {
-		console.log("New "+socket.id)
-		let tempTok = token();
-		users.push(new user(socket,tempTok));
-		socket.emit("tokenGen",tempTok);
-		console.log("HELLO")
-		console.log(outputTokens());
-	});
-	socket.on('newId', (token) => {
-		var p = users.filter(obj => {
-			return obj.token === token;
-	  	});
-		if (p.length > 0){
-			p[0].sock.id = socket.id;
-		}else{
-			socket.emit("goAway");
-		}
-		console.log("IDCHANGE")
-		console.log(outputTokens());
-	});
-	socket.on("search",(userN)=>{
-		var p = users.filter(obj => {
-			return obj.sock.id === socket.id
-	  	});
-		p[0].userName= userN;
-		if (searchUser == undefined){
-			searchUser = p[0];
-			p[0].state="search";
-		}else{
-			p[0].changing = true;
-			p[0].page = "matchStart";
-			socket.emit("foundOp",searchUser.userName);
-			searchUser.changing = true;
-			searchUser.page = "matchStart";
-			io.to(searchUser.sock.id).emit("foundOp",p[0].userName);
-			let matchTok = token();
-			matches.push(new match(matchTok,p[0],searchUser));
-			p[0].matchId = matchTok;
-			searchUser.matchId = matchTok;
-			searchUser = undefined;
-		}
-	});
-	socket.on('changingPage', (page) => {
-		var p = users.filter(obj => {
-			return obj.sock.id === socket.id
-	  	});
-		p[0].changing=true;
-		p[0].page = page;
-		socket.emit("changeAccept",page);
-	});
-	socket.on("vote",(index)=>{
-		var p = users.filter(obj => {
-			return obj.sock.id === socket.id
-	  	});
-		var m = matches.filter(obj => {
-			return obj.id === p[0].matchId
-	  	});
-		m[0].votes[index]++;
-		console.log(m[0].votes.reduce((partialSum, a) => partialSum + a, 0));
-		if (m[0].votes.reduce((partialSum, a) => partialSum + a, 0)==2){
-			let votedOn = [];
-			for (i = 0;i<3;i++){
-				if (m[0].votes[i]>0){
-					votedOn.push(i);
-				}
-			}
-			console.log(votedOn);
-			let winner = m[0].games[votedOn[Math.floor(Math.random()*votedOn.length)]];
-			console.log(winner);
-			switch(winner){
-				case 0:
-					m[0].game = "operation";
-					break;
-				case 1:
-					m[0].game = "swipe";
-					break;
-				case 2:
-					m[0].game = "touchNumber";
-					break;
-				case 3:
-					m[0].game = "pathTo";
-					break;
-			}
-			//console.log(m[0].users);
-			m[0].users[0].changing=true;
-			m[0].users[0].page = m[0].game;
-			m[0].users[0].playerNum = 1;
-			//console.log(m[0].users[0].sock.id);
-			//console.log(socket.id);
-			//socket.emit("gay");
-			io.to(m[0].users[0].sock.id).emit("changeAccept",m[0].game);
-			m[0].users[1].changing=true;
-			m[0].users[1].page = m[0].game;
-			m[0].users[1].playerNum = 2;
-			io.to(m[0].users[1].sock.id).emit("changeAccept",m[0].game);
-			m[0].started = true;
-			m[0].startTime = new Date();
-			setTimeout(endMatch,30000);
-		}
-	});
-	socket.on("point",(num)=>{
+	*/
+	socket.on('message', function incoming(data) {
 
-		var p = users.filter(obj => {
-			return obj.sock.id === socket.id
-	  	});
-		var m = matches.filter(obj => {
-			return obj.id === p[0].matchId
-	  	});
-		if (m.length > 0 ){
-			m[0].scores[p[0].playerNum-1]+=num;
-			console.log(m[0].scores);
-			io.to(m[0].users[0].sock.id).emit("updateScores",m[0].scores[0]+50-m[0].scores[1]);
-			io.to(m[0].users[1].sock.id).emit("updateScores",m[0].scores[1]+50-m[0].scores[0]);
-		}
-	});
-	socket.on("getScore",(callback)=>{
-		var p = users.filter(obj => {
-			return obj.sock.id === socket.id
-	  	});
-		if (p.length>0){
-			callback(p[0].oldScore);
+		if (typeof data != "string"){
+			var d = new TextDecoder().decode(new Uint8Array(data));
 		}else{
-			callback(0);
-			socket.emit("goAway");
+			var d = data;
 		}
-	});
-	socket.on("getGames",(callback)=>{
-		var p = users.filter(obj => {
-			return obj.sock.id === socket.id
-	  	});
-		if (p.length>0){
+		d = d.split("|");
+		var para = JSON.parse(d[1]);
+		if (d[0]=="hello"){
+			let tempTok = token();
+			console.log("New "+tempTok)
+			users.push(new user(socket,tempTok));
+			socket.send("tokenGen|"+JSON.stringify({"token":tempTok}));
+			console.log("HELLO")
+			console.log(outputTokens());
+		}else if (d[0]=="newId"){
+			var p = users.filter(obj => {
+				return obj.token === para["token"];
+			});
+			if (p.length > 0){
+				p[0].sock = socket;
+			}else{
+				socket.send("goAway|{}");
+			}
+			console.log("IDCHANGE")
+			console.log(outputTokens());
+		}else if (d[0]=="search"){
+			var p = users.filter(obj => {
+				return obj.sock.id === socket.id
+			});
+			p[0].userName= para["userN"];
+			if (searchUser == undefined){
+				searchUser = p[0];
+				p[0].state="search";
+			}else{
+				p[0].changing = true;
+				p[0].page = "matchStart";
+				socket.send("foundOp|"+JSON.stringify({"userN":searchUser.userName}));
+				searchUser.changing = true;
+				searchUser.page = "matchStart";
+				searchUser.sock.send("foundOp|"+JSON.stringify({"userN":p[0].userName}));
+				let matchTok = token();
+				matches.push(new match(matchTok,p[0],searchUser));
+				p[0].matchId = matchTok;
+				searchUser.matchId = matchTok;
+				searchUser = undefined;
+			}
+		}else if (d[0]=="changingPage"){
+			var p = users.filter(obj => {
+				return obj.sock.id === socket.id
+			  });
+			p[0].changing=true;
+			p[0].page = para["page"];
+			socket.send("changeAccept|"+JSON.stringify({"page":para["page"]}));
+		}else if (d[0]=="vote"){
+			var p = users.filter(obj => {
+				return obj.sock.id === socket.id
+			  });
 			var m = matches.filter(obj => {
 				return obj.id === p[0].matchId
-			});
-			if (m.length>0){
-				callback(m[0].games);
-			}else{
-				callback(0);
-				socket.emit("goAway");
+			  });
+			m[0].votes[para["index"]]++;
+			console.log(m[0].votes.reduce((partialSum, a) => partialSum + a, 0));
+			if (m[0].votes.reduce((partialSum, a) => partialSum + a, 0)==2){
+				let votedOn = [];
+				for (i = 0;i<3;i++){
+					if (m[0].votes[i]>0){
+						votedOn.push(i);
+					}
+				}
+				console.log(votedOn);
+				let winner = m[0].games[votedOn[Math.floor(Math.random()*votedOn.length)]];
+				console.log(winner);
+				switch(winner){
+					case 0:
+						m[0].game = "operation";
+						break;
+					case 1:
+						m[0].game = "swipe";
+						break;
+					case 2:
+						m[0].game = "touchNumber";
+						break;
+					case 3:
+						m[0].game = "pathTo";
+						break;
+				}
+				//console.log(m[0].users);
+				m[0].users[0].changing=true;
+				m[0].users[0].page = m[0].game;
+				m[0].users[0].playerNum = 1;
+				//console.log(m[0].users[0].sock.id);
+				//console.log(socket.id);
+				//socket.emit("gay");
+				m[0].users[0].sock.send("changeAccept|"+JSON.stringify({"page":m[0].game}));
+				m[0].users[1].changing=true;
+				m[0].users[1].page = m[0].game;
+				m[0].users[1].playerNum = 2;
+				m[0].users[1].sock.send("changeAccept|"+JSON.stringify({"page":m[0].game}));
+				m[0].started = true;
+				m[0].startTime = new Date();
+				setTimeout(endMatch,30000);
 			}
-		}else{
-			callback(0);
-			socket.emit("goAway");
+		}else if (d[0]=="point"){
+			var p = users.filter(obj => {
+				return obj.sock.id === socket.id
+			  });
+			var m = matches.filter(obj => {
+				return obj.id === p[0].matchId
+			  });
+			if (m.length > 0 ){
+				m[0].scores[p[0].playerNum-1]+=para["num"];
+				console.log(m[0].scores);
+				m[0].users[0].sock.send("updateScores|"+JSON.stringify({"score":m[0].scores[0]+50-m[0].scores[1]}));
+				m[0].users[1].sock.send("updateScores|"+JSON.stringify({"score":m[0].scores[1]+50-m[0].scores[0]}));
+			}
+		}else if (d[0]=="getScore"){
+			var p = users.filter(obj => {
+				return obj.sock.id === socket.id
+			});
+			if (p.length>0){
+				socket.send("scoreReply|"+JSON.stringify({"score":p[0].oldScore}));
+			}else{
+				socket.send("goAway|{}");
+			}
+		}else if (d[0]=="getGames"){
+			var p = users.filter(obj => {
+				return obj.sock.id === socket.id
+			  });
+			if (p.length>0){
+				var m = matches.filter(obj => {
+					return obj.id === p[0].matchId
+				});
+				if (m.length>0){
+					console.log("hai");
+					socket.send("gameReply|"+JSON.stringify({"games":m[0].games}));
+				}else{
+					console.log("no match");
+					socket.send("goAway|{}");
+				}
+			}else{
+				console.log("no player");
+				socket.send("goAway|{}");
+			}
+		}
+		var p = users.filter(obj => {
+			return obj.sock.id === socket.id
+	  	});
+		if (p.length>0){
+    		p[0].lastcall = new Date();
 		}
 	});
-	
 });
 var token = function() {
 	return (Math.random().toString(36).substr(2)+Math.random().toString(36).substr(2));
@@ -301,17 +310,46 @@ function endMatch(){
 	deadMatch.users[0].state = "chill";
 	deadMatch.users[0].matchId = 0;
 	deadMatch.users[0].oldScore = [deadMatch.scores[0],deadMatch.scores[1]]
-	io.to(deadMatch.users[0].sock.id).emit("changeAccept","scoreScreen");
+	deadMatch.users[0].sock.send("changeAccept|"+JSON.stringify({"page":"scoreScreen"}));
 	deadMatch.users[1].changing = true;
 	deadMatch.users[1].page = "";
 	deadMatch.users[1].state = "chill";
 	deadMatch.users[1].matchId = 0;
 	deadMatch.users[1].oldScore = [deadMatch.scores[1],deadMatch.scores[0]]
-	io.to(deadMatch.users[1].sock.id).emit("changeAccept","scoreScreen");
+	deadMatch.users[1].sock.send("changeAccept|"+JSON.stringify({"page":"scoreScreen"}));
 }
-
+function update(){
+	for (i=users.length-1;i>=0;i--){
+	  if (new Date(users[i].lastcall.getTime() + 2000)  < new Date()){
+		if (searchUser != undefined){
+			if (searchUser.token == users[i].token){
+				searchUser = undefined;
+			}
+		}
+		if (users[i].matchId != 0){
+			var m = matches.filter(obj => {
+				return obj.id === users[i].matchId
+			});
+			if (m[0].users[0].token == users[i].token){
+				m[0].users[1].changing = true;
+				m[0].users[1].page = "";
+				m[0].users[1].state = "chill";
+				m[0].users[1].sock.send("changeAccept|"+JSON.stringify({"page":""}));
+			}else{
+				m[0].users[0].changing = true;
+				m[0].users[0].page = "";
+				m[0].users[0].state = "chill";
+				m[0].users[0].sock.send("changeAccept|"+JSON.stringify({"page":""}));
+			}
+		}
+		users.splice(i,1);
+		console.log("Killed");
+	  }
+	}
+  }
+setInterval(update,500);
 //setInterval(update,100);
 //Just network code. You can ignore.
-http.listen(80, () => {
+app.listen(80, () => {
 	console.log('listening on *:80');
   });

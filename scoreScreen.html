@@ -4,7 +4,6 @@
     <meta name="viewport" content="width=device-width user-scalable=no" />
     <meta charset="utf-8">
     <title>Start Screen</title>
-    <script src="/socket.io/socket.io.js"></script>
     <script src="baseClient.js"></script>
     <link rel="stylesheet" href="startStyle.css">
     <link rel="stylesheet" href="scoreScreen.css">
@@ -37,30 +36,45 @@
 <script>
     var symbols = ["★","⨯"];
     var winText = ["You win!","You lose.."];
-    socket.emit("getScore",(response) => {
-        let tempBar = response[0]+50-response[1];
-        if (tempBar>50){
-            document.getElementById("wSymbol").innerHTML = symbols[0];
-            document.getElementById("wins").innerHTML = winText[0];
-        }else{
-            document.getElementById("wSymbol").innerHTML = symbols[1];
-            document.getElementById("wins").innerHTML = winText[1];
-        }
-        document.getElementById("leftSide").style.width = (tempBar-1)+"%";
-        document.getElementById("rightSide").style.width = (99-tempBar)+"%";
+    socket.onopen = () => {
+        base();
+        socket.send("getScore|{}");
+        socket.onmessage = ({ data }) => {
+            if (typeof data != "string"){
+                var d = new TextDecoder().decode(new Uint8Array(data));
+            }else{
+                var d = data;
+            }
+            d = d.split("|");
+            var para = JSON.parse(d[1]);
+            if (d[0]=="scoreReply"){
+                let tempBar = para["score"][0]+50-para["score"][1];
+                if (tempBar>50){
+                    document.getElementById("wSymbol").innerHTML = symbols[0];
+                    document.getElementById("wins").innerHTML = winText[0];
+                }else{
+                    document.getElementById("wSymbol").innerHTML = symbols[1];
+                    document.getElementById("wins").innerHTML = winText[1];
+                }
+                document.getElementById("leftSide").style.width = (tempBar-1)+"%";
+                document.getElementById("rightSide").style.width = (99-tempBar)+"%";
 
-        document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
-        document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
-        document.getElementById("leftScore").innerHTML=response[0];
-        document.getElementById("rightScore").innerHTML=response[1];
-    });
-    function home(){
-        socket.emit("changingPage","");
+                document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
+                document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
+                document.getElementById("leftScore").innerHTML=para["score"][0];
+                document.getElementById("rightScore").innerHTML=para["score"][1];
+            }else if (d[0]=="changeAccept"){
+                document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                setTimeout(function(){document.location.href = "./"+para["page"];},1000);
+            }else if (d[0]=="goAway"){
+                sessionStorage.clear();
+                window.location.replace("/");
+            }
+        };
     }
-    socket.on("changeAccept",(newPage)=>{
-        document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-        setTimeout(function(){document.location.href = "./"+newPage;},1000);
-    });
+    function home(){
+        socket.send("changingPage|"+JSON.stringify({"page":""}));
+    }
     /*
     document.getElementById("oppName").innerHTML=sessionStorage.getItem("opName");
     var voted = false;

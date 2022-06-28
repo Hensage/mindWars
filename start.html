@@ -4,8 +4,6 @@
     <meta name="viewport" content="width=device-width user-scalable=no" />
     <meta charset="utf-8">
     <title>Start Screen</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="baseClient.js"></script>
     <link rel="stylesheet" href="startStyle.css">
 </head>
 
@@ -23,14 +21,35 @@
     <p id="wait" style="display:none">Finding opponent...</p>
 </div>
 </body>
+<script src="baseClient.js"></script>
 <script>
-    
-    document.getElementById("Body").requestFullscreen();
-    socket.emit("hello");
-    socket.on("tokenGen",(token)=>{
-        sessionStorage.setItem("token",token);    
-    });
-
+    socket.onopen = () => {
+        base();
+        socket.send("hello|{}");
+        socket.onmessage = ({ data }) => {
+            if (typeof data != "string"){
+                var d = new TextDecoder().decode(new Uint8Array(data));
+            }else{
+                var d = data;
+            }
+            d = d.split("|");
+            var para = JSON.parse(d[1]);
+            if (d[0]=="tokenGen"){
+                console.log("yum yum token");
+                sessionStorage.setItem("token",para["token"]);
+            }else if (d[0]=="foundOp"){
+                sessionStorage.setItem("opName",para["userN"]);
+                document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                setTimeout(function(){document.location.href = "./matchStart";},1000);
+            }else if (d[0]=="changeAccept"){
+                document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                setTimeout(function(){document.location.href = "./"+para["page"];},1000);
+            }else if (d[0]=="goAway"){
+                sessionStorage.clear();
+                window.location.replace("/");
+            }
+        };
+    }
     var waiting = false;
     function play(){
         if (document.getElementById("name").value != "" && waiting == false){
@@ -41,20 +60,11 @@
             document.getElementById("submit").style.display = "none";
             document.getElementById("wait").style.display = "block";
             waiting = true;
-            socket.emit("search",document.getElementById("name").value);
+            socket.send("search|"+JSON.stringify({"userN":document.getElementById("name").value}));
             //socket.emit("changingPage","matchStart");
             //setTimeout(nextPage,5000);
         }
     }
-    socket.on("foundOp",(userN)=>{
-        sessionStorage.setItem("opName",userN);
-        document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-        setTimeout(function(){document.location.href = "./matchStart";},1000);
-    });
-    socket.on("changeAccept",(newPage)=>{
-        document.getElementById("main").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-        setTimeout(function(){document.location.href = "./"+newPage;},1000);
-    });
     window.addEventListener("submit",function (e) {
         e.preventDefault();
         play();

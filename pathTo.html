@@ -4,7 +4,6 @@
     <meta name="viewport" content="width=device-width user-scalable=no" />
     <meta charset="utf-8">
     <title>Operations</title>
-    <script src="/socket.io/socket.io.js"></script>
     <script src="baseClient.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="pathTo.css">
@@ -76,9 +75,34 @@
                     false,false,false,false,
                     false,false,false,false,
                     false,false,false,false];
-    document.getElementById("Body").addEventListener('touchstart',touchStart, false);
-    document.getElementById("Body").addEventListener('touchend', touchEnd, false);
-    window.addEventListener('touchmove',touchMove, { passive: false });
+
+    socket.onopen = () => {
+        base();
+        setUp();
+        socket.onmessage = ({ data }) => {
+            if (typeof data != "string"){
+                var d = new TextDecoder().decode(new Uint8Array(data));
+            }else{
+                var d = data;
+            }
+            d = d.split("|");
+            var para = JSON.parse(d[1]);
+            if (d[0]=="updateScores"){
+                console.log(para["score"])
+                document.getElementById("leftSide").style.width = (para["score"]-1)+"%";
+                document.getElementById("rightSide").style.width = (99-para["score"])+"%";
+            }else if (d[0]=="changeAccept"){
+                document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
+                setTimeout(function(){document.location.href = "./"+para["page"];},1000);
+            }else if (d[0]=="goAway"){
+                sessionStorage.clear();
+                window.location.replace("/");
+            }
+        }
+    };
     function touchStart(ev){
         if (flagVis){
             touching=true;
@@ -118,7 +142,7 @@
                             if (bombs[0]==i ||bombs[1]==i ){
                                 currBut.style.background = "red";
                                 touching=false;
-                                socket.emit("point",-2);
+                                socket.send("point|"+JSON.stringify({"num":-2}));
                                 setTimeout(setUp,500);
                             }else if ((lastTouch==-1 && (flags[0]==i||flags[1]==i)) || lastTouch!=-1){
                                 //console.log(i+" gone Green");
@@ -126,9 +150,9 @@
                                     touching=false;
                                     completed = true;
                                     if (starGot){
-                                        socket.emit("point",2);
+                                        socket.send("point|"+JSON.stringify({"num":2}));
                                     }else{
-                                        socket.emit("point",1);
+                                        socket.send("point|"+JSON.stringify({"num":1}));
                                     }
                                     setTimeout(setUp,500);
                                 }
@@ -211,43 +235,8 @@
         flagVis = true;
         document.getElementById("submit").style.display="none";
     }
-    setUp();
-    /*
-    var ranNum;
-    var ranBool;
-    var current= 0;
-    var score = 50;
-    var nums;
-    var numbers = [1,2,3,4,5,6,7,8,9];
-    var colours = ["#4871a0","#a54d4d"];
-    setUp();
-    document.getElementById("leftName").innerHTML=sessionStorage.getItem("name");
-    document.getElementById("rightName").innerHTML=sessionStorage.getItem("opName");
-
-    function setUp(){
-        ranBool = Math.floor(Math.random()*2);  
-        numbers = [1,2,3,4,5,6,7,8,9];
-        for (i = 1;i<10;i++){
-            ranNum = Math.floor(Math.random()*numbers.length);
-            document.getElementById("but"+i).innerHTML = numbers[ranNum];
-            numbers.splice(ranNum,1);
-            document.getElementById("but"+i).style.background=colours[ranBool];
-            document.getElementById("but"+i).style.animation = "0.5s ease-out 0s 1 fadeIn";
-            document.getElementById("but"+i).style.visibility = 'visible';
-        }
-        current = (ranBool*8);
-    }
-    */
-    socket.on("updateScores",(score)=>{
-        document.getElementById("leftSide").style.width = (score-1)+"%";
-        document.getElementById("rightSide").style.width = (99-score)+"%";
-    });
-    socket.on("changeAccept",(newPage)=>{
-        document.getElementById("leftName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-        document.getElementById("time").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-        document.getElementById("rightName").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-        document.getElementById("game").style.animation = "1s ease-out 0s 1 fadeOut normal forwards";
-        setTimeout(function(){document.location.href = "./"+newPage;},1000);
-    });
+    document.getElementById("Body").addEventListener('touchstart',touchStart, false);
+    document.getElementById("Body").addEventListener('touchend', touchEnd, false);
+    window.addEventListener('touchmove',touchMove, { passive: false });
 </script>
 </html>
